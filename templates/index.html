@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rover Status</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body {font-family: system-ui; margin: 1rem; background: #f8f9fa;}
+    table {width: 100%; border-collapse: collapse; font-size: 1rem; margin-top: 1rem;}
+    th, td {padding: 0.8rem; border: 1px solid #dee2e6; text-align: left;}
+    th {background: #e9ecef;}
+    .ok {color: #28a745; font-weight: bold;}
+    .fail, .crash {color: #dc3545; font-weight: bold;}
+    .extra {font-size: 0.85rem; color: #6c757d;}
+    h1 {margin-bottom: 0.2rem;}
+    .small {font-size: 0.8rem; color: #6c757d;}
+  </style>
+</head>
+<body>
+  <h1>Rover Status</h1>
+  <p class="small">Live from Flask • Updates every 2s</p>
+
+  <table id="tbl">
+    <thead>
+      <tr><th>Component</th><th>Status</th><th>Details</th><th>Last</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const socket = io("http://127.0.0.1:5000", {transports: ["websocket"]});
+    const tbody = document.querySelector("#tbl tbody");
+
+    function render(data) {
+      tbody.innerHTML = "";
+      for (const [name, info] of Object.entries(data)) {
+        const ago = ((Date.now() / 1000) - info.last).toFixed(1);
+        const row = document.createElement("tr");
+        const statusClass = info.val === "OK" ? "ok" : (info.val === "Crash" ? "crash" : "fail");
+        row.innerHTML = `
+          <td><strong>${name}</strong></td>
+          <td class="${statusClass}">${info.val}</td>
+          <td class="extra">${info.extra || "-"}</td>
+          <td>${ago}s ago</td>
+        `;
+        tbody.appendChild(row);
+      }
+    }
+
+    socket.on("connect", () => console.log("WebSocket connected"));
+    socket.on("update", render);
+    socket.on("connect_error", (err) => console.error("WebSocket error:", err));
+  </script>
+</body>
+</html>
