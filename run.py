@@ -1,20 +1,29 @@
-# run.py – FINAL, NO RLOCK WARNING, PERFECT STARTUP
+# run.py – WORKS ON MOBILE + LAPTOP
 import eventlet
-eventlet.monkey_patch(all=True)   # <-- FULL PATCH FIRST
+eventlet.monkey_patch(all=True)
 
 from app import app, socketio, udp_listener, wifi_check, camera_check, watchdog, broadcaster
-import threading, time
+import threading, time, socket
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
 
 if __name__ == "__main__":
-    # Start background threads
     threading.Thread(target=udp_listener, daemon=True).start()
     threading.Thread(target=wifi_check,   daemon=True).start()
     threading.Thread(target=camera_check, daemon=True).start()
     threading.Thread(target=watchdog,     daemon=True).start()
     threading.Thread(target=broadcaster,  daemon=True).start()
 
-    # Tiny delay so UDP listener is ready before browser connects
     time.sleep(1)
-
-    print("Open http://127.0.0.1:5000")
+    ip = get_local_ip()
+    print(f"\nOPEN ON ANY DEVICE (WiFi): http://{ip}:5000\n")
     socketio.run(app, host="0.0.0.0", port=5000)

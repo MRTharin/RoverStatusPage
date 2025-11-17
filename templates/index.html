@@ -29,7 +29,13 @@
   </table>
 
   <script>
-    const socket = io("http://127.0.0.1:5000", {transports: ["websocket"]});
+    // Get current page URL → extract IP (e.g., 192.168.1.25)
+    const currentHost = window.location.hostname;
+    const socket = io(`http://${currentHost}:5000`, {
+      transports: ["websocket"],
+      reconnectionAttempts: 5
+    });
+
     const tbody = document.querySelector("#tbl tbody");
 
     function render(data) {
@@ -48,9 +54,13 @@
       }
     }
 
-    socket.on("connect", () => console.log("WebSocket connected"));
+    socket.on("connect", () => {
+      console.log("Connected to server!");
+    });
     socket.on("update", render);
-    socket.on("connect_error", (err) => console.error("WebSocket error:", err));
+    socket.on("connect_error", (err) => {
+      console.error("Connection failed:", err.message);
+    });
   </script>
 </body>
 </html>
