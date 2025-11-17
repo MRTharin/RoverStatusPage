@@ -1,7 +1,11 @@
 import eventlet
 eventlet.monkey_patch(all=True)
 
-from app import app, socketio, udp_listener, camera_check, wifi_check, broadcaster
+# Import everything we need from app.py
+from app import (app, socketio, udp_listener, 
+                 camera_check, wifi_check, 
+                 broadcaster, auto_recovery)   # ← THIS LINE ADDED
+
 import threading, time, socket
 
 def get_local_ip():
@@ -15,6 +19,7 @@ if __name__ == "__main__":
     threading.Thread(target=udp_listener, daemon=True).start()
     threading.Thread(target=camera_check, daemon=True).start()
     threading.Thread(target=wifi_check,   daemon=True).start()
+    threading.Thread(target=auto_recovery, daemon=True).start()   # ← NOW WORKS!
     threading.Thread(target=broadcaster,  daemon=True).start()
 
     time.sleep(1)
